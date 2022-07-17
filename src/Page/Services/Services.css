@@ -5,7 +5,5 @@
 .card-area {
     width: 440px;
     height: 310px;
-    background: #FFFFFF;
-    box-shadow: 3px 4px 10px 2px rgba(0, 0, 0, 0.05);
-    border-radius: 18px;
+
 }
