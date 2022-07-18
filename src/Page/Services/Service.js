@@ -6,7 +6,7 @@ import Show from './Show';
 
 const Service = () => {
     return (
-        <div class="grid grid-cols-1 lg:grid-cols-3 px-12 mt-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 mt-5">
             <Show cardTitle={"Fluoride Treatment"} img={picture1}></Show>
             <Show cardTitle={"Cavity Filling"} img={picture2}></Show>
             <Show cardTitle={"Teeth Whitening"} img={picture3}></Show>
