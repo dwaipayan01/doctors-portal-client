@@ -1,74 +1,79 @@
-import React, { useEffect, useState } from 'react';
-import { useSendPasswordResetEmail, useSignInWithEmailAndPassword, useSignInWithGoogle } from 'react-firebase-hooks/auth';
+import React from 'react';
+import { useCreateUserWithEmailAndPassword, useSendEmailVerification, useSignInWithGoogle, useUpdateProfile } from 'react-firebase-hooks/auth';
 import auth from '../../firebase.init';
 import { useForm } from "react-hook-form";
 import Loading from '../Loading/Loading';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { async } from '@firebase/util';
+import { Link, useNavigate } from 'react-router-dom';
 import useToken from '../../hooks/useToken';
 
-
-const Login = () => {
+const Signup = () => {
     const [signInWithGoogle, user, loading, error] = useSignInWithGoogle(auth);
     const [
-        signInWithEmailAndPassword,
+        createUserWithEmailAndPassword,
         user1,
         loading1,
         error1,
-    ] = useSignInWithEmailAndPassword(auth);
-    const [token] = useToken(user || user1);
-    const [email, setEmail] = useState("");
-    const [sendPasswordResetEmail, sending,] = useSendPasswordResetEmail(auth);
-    let location = useLocation();
+    ] = useCreateUserWithEmailAndPassword(auth);
+    const [updateProfile, updating, updateError] = useUpdateProfile(auth);
+    const [sendEmailVerification, sending] = useSendEmailVerification(auth);
     const navigate = useNavigate();
-    const from = location.state?.from?.pathname || "/";
+    const [token] = useToken(user || user1);
 
     const { register, formState: { errors }, handleSubmit } = useForm();
-    useEffect(() => {
-        if (token) {
-            navigate(from, { replace: true });
-        }
-    }, [token, from, navigate])
-    if (loading || loading1) {
+    if (loading || loading1 || updating) {
         return <Loading></Loading>
     }
     let errorMessage;
-    if (error || error1) {
+    if (error || error1 || updateError) {
         errorMessage = <p className="text-red-500">{error?.message} || {error1.message}</p>
     }
-    const handleEmail = (event) => {
-        setEmail(event.target.value)
+
+    if (token) {
+        navigate("/");
     }
-
-
     const onSubmit = async data => {
-        await signInWithEmailAndPassword(data.email, data.password);
-
-    }
-    const handleReset = async (event) => {
-        console.log(email);
-        if (email) {
-            sendPasswordResetEmail(email);
-            alert("Email sent to your mail")
-        }
-        else {
-            alert("Please provide valid email")
-        }
+        await createUserWithEmailAndPassword(data.email, data.password);
+        await updateProfile({ displayName: data.name })
+        await sendEmailVerification();
+        console.log("Update done");
 
     }
     return (
         <div className="flex h-screen justify-center items-center">
             <div className="card w-96 bg-base-100 shadow-xl">
                 <div className="card-body">
-                    <h2 className="text-center text-3xl font-bold">Login</h2>
+                    <h2 className="text-center text-3xl font-bold">Sign up</h2>
                     <form onSubmit={handleSubmit(onSubmit)}>
+                        <div className="form-control w-full max-w-xs">
+                            <label className="label">
+                                <span className="label-text">Name</span>
+
+                            </label>
+                            <input
+                                type="text" placeholder="Type Name"
+                                className="input input-bordered w-full max-w-xs"
+                                {...register("name", {
+                                    required: {
+                                        value: true,
+                                        message: "Name is required"
+                                    },
+
+                                })}
+
+                            />
+                            <label className="label">
+                                {errors.name?.type === 'required' && <span className="label-text-alt text-red-500">{errors.email.message}</span>}
+
+                            </label>
+
+                        </div>
                         <div className="form-control w-full max-w-xs">
                             <label className="label">
                                 <span className="label-text">Email</span>
 
                             </label>
                             <input
-                                type="email" onBlur={handleEmail} name="email" placeholder="Type Email"
+                                type="email" placeholder="Type Email"
                                 className="input input-bordered w-full max-w-xs"
                                 {...register("email", {
                                     required: {
@@ -105,7 +110,6 @@ const Login = () => {
                                         value: 6,
                                         message: 'Password must contain six charecter'
                                     }
-
                                 })}
 
                             />
@@ -120,10 +124,8 @@ const Login = () => {
 
 
                         {errorMessage}
-
                         <input className="btn w-full max-w-xs" type="submit" />
-                        <p><small>Forget Password? <Link className="text-secondary" onClick={handleReset} to="/login">Reset Password</Link></small></p>
-                        <p><small>New to doctors portal? <Link className="text-secondary" to="/signup">Sign up</Link></small></p>
+                        <p><small>Already have an account? <Link className="text-secondary" to="/login">Login</Link></small></p>
                     </form>
                     <div className="divider">OR</div>
                     <button onClick={() => signInWithGoogle()} className="btn btn-outline">Continue with google</button>
@@ -133,4 +135,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Signup;
